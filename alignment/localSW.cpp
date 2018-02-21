@@ -105,24 +105,24 @@ void alignLocalSW(const string& X, const string& Y)
         const int M = 1;
         const int I = -1;
 
-        size_t m = X.length();
-        size_t n = Y.length();
+        int m = (int)X.length();
+        int n = (int)Y.length();
 
         // initialize an (m+1) x (n+1) matrix S
         Matrix S(m+1, n+1);
 
         // initialize first column
-        for (size_t i = 0; i <= m; i++)
+        for (int i = 0; i <= m; i++)
                 S(i, 0) = 0;
 
         // initialize first row
-        for (size_t j = 1; j <= n; j++)
+        for (int j = 1; j <= n; j++)
                 S(0, j) = 0;
 
         // fill in the rest of the matrix
         int maxVal = 0, maxi = 0, maxj = 0;
-        for (size_t i = 1; i <= m; i++) {
-                for (size_t j = 1; j <= n; j++) {
+        for (int i = 1; i <= m; i++) {
+                for (int j = 1; j <= n; j++) {
                         int diag = S(i-1, j-1) + (X[i-1] == Y[j-1] ? M : I);
                         int gapX = S(i, j-1) + G;
                         int gapY = S(i-1, j) + G;
@@ -136,7 +136,7 @@ void alignLocalSW(const string& X, const string& Y)
         }
 
         // create an alignment
-        string alX, alY, mid;
+        string alX = X.substr(maxi), alY = Y.substr(maxj), mid;
 
         int i = maxi;
         int j = maxj;
@@ -162,22 +162,22 @@ void alignLocalSW(const string& X, const string& Y)
                 }
         }
 
-        for (size_t c = 0; c < i; c++) {
-                alY.push_back(' ');
-                mid.push_back(' ');
-        }
-
-        for (size_t c = 0; c < j; c++) {
+        for (int c = i-1; c >= 0; c--)
+                alX.push_back(X[c]);
+        for (int c = 0; c < j-i; c++)
                 alX.push_back(' ');
+
+        for (int c = 0; c < max(i, j); c++)
                 mid.push_back(' ');
-        }
+
+        for (int c = j-1; c >= 0; c--)
+                alY.push_back(Y[c]);
+        for (int c = 0; c < i-j; c++)
+                alY.push_back(' ');
 
         reverse(alX.begin(), alX.end());
         reverse(alY.begin(), alY.end());
         reverse(mid.begin(), mid.end());
-
-        alX = X.substr(0, i) + alX + X.substr(maxi);
-        alY = Y.substr(0, j) + alY + Y.substr(maxj);
 
         cout << "Local alignment X[" << i << "-" << maxi-1 << "], Y["
              << j << "-" << maxj-1 << "]\n";
