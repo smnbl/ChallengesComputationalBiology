@@ -34,11 +34,11 @@ private:
 public:
         /**
          * Constructor
-         * @param D Number of elements along the diagnal
+         * @param m Number of rows
          * @param W Number of off-diagonal elements (one sided)
          */
-        BandMatrix(size_t D, size_t W) : W(W) {
-                matrix.resize(D * (2*W+1));
+        BandMatrix(int m, int W) : W(W) {
+                matrix.resize(m * (2*W+1));
         }
 
         /**
@@ -48,9 +48,7 @@ public:
          * @return Element at position (i, j)
          */
         int operator() (int i, int j) const {
-                int k = max(i, j);
-                int l = W - i + j;
-                return matrix[k * (2*W+1) + l];
+                return matrix[i * (2*W+1) + j - i + W];
         }
 
         /**
@@ -60,9 +58,7 @@ public:
          * @return Reference to element at position (i, j)
          */
         int& operator() (int i, int j) {
-                int k = max(i, j);
-                int l = W - i + j;
-                return matrix[k * (2*W+1) + l];
+                return matrix[i * (2*W+1) + j - i + W];
         }
 };
 
@@ -104,6 +100,7 @@ void readSequences(const string& filename, vector<string>& sequences)
  * Perform global alignment of two sequences and print the alignment to stdout
  * @param X sequence one
  * @param Y sequence two
+ * @param W number of diagonals on each side of the main diagonal (W >= 0)
  */
 void alignBandedNW(const string& X, const string& Y, int W)
 {
@@ -111,8 +108,8 @@ void alignBandedNW(const string& X, const string& Y, int W)
         const int M = 1;
         const int I = -1;
 
-        size_t m = X.length();
-        size_t n = Y.length();
+        int m = (int)X.length();
+        int n = (int)Y.length();
 
         // check the dimensions of s1 and s2
         if ((max(m, n) - min(m, n)) > W) {
@@ -121,13 +118,14 @@ void alignBandedNW(const string& X, const string& Y, int W)
                 exit(EXIT_FAILURE);
         }
 
-        if (W > max(m,n))
-                W = max(m, n);
+        // no need for more than n extra diagonals
+        if (W > n)
+                W = n;
 
-        BandMatrix S(max(m, n)+1, W);
+        BandMatrix S(m+1, W);
 
         // initialize first column
-        for (size_t i = 0; i <= W; i++)
+        for (size_t i = 0; i <= min(W, m); i++)
                 S(i, 0) = i * G;
 
         // initialize first row
@@ -135,11 +133,11 @@ void alignBandedNW(const string& X, const string& Y, int W)
                 S(0, j) = j * G;
 
         // fill in the rest of the matrix
-        for (size_t i = 1; i <= m; i++) {
-                size_t startj = max<int>(1, i - W);
-                size_t endj = min<int>(n, i + W);
+        for (int i = 1; i <= m; i++) {
+                int startj = max(1, i - W);
+                int endj = min(n, i + W);
 
-                for (size_t j = startj; j <= endj; j++) {
+                for (int j = startj; j <= endj; j++) {
                         int diag = S(i-1, j-1) + (X[i-1] == Y[j-1] ? M : I);
                         int gapX = (j > i - W) ? S(i, j-1) + G : diag - 1;
                         int gapY = (j < i + W) ? S(i-1, j) + G : diag - 1;
