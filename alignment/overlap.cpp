@@ -107,23 +107,23 @@ void alignOverlap(const string& X, const string& Y)
         const int M = 1;
         const int I = -1;
 
-        size_t m = X.length();
-        size_t n = Y.length();
+        int m = (int)X.length();
+        int n = (int)Y.length();
 
         // initialize an (m+1) x (n+1) matrix S
         Matrix S(m+1, n+1);
 
         // initialize first column
-        for (size_t i = 0; i <= m; i++)
+        for (int i = 0; i <= m; i++)
                 S(i, 0) = 0;
 
         // initialize first row
-        for (size_t j = 1; j <= n; j++)
+        for (int j = 1; j <= n; j++)
                 S(0, j) = 0;
 
         // fill in the rest of the matrix
-        for (size_t i = 1; i <= m; i++) {
-                for (size_t j = 1; j <= n; j++) {
+        for (int i = 1; i <= m; i++) {
+                for (int j = 1; j <= n; j++) {
                         int diag = S(i-1, j-1) + (X[i-1] == Y[j-1] ? M : I);
                         int gapX = S(i, j-1) + G;
                         int gapY = S(i-1, j) + G;
@@ -133,7 +133,7 @@ void alignOverlap(const string& X, const string& Y)
 
         // find the endpoint of the alignment
         int maxVal = 0, maxi = 0, maxj = 0;
-        for (size_t i = 0; i <= m; i++) {
+        for (int i = 0; i <= m; i++) {
                 if (S(i, n) > maxVal) {
                         maxVal = S(i, n);
                         maxi = i;
@@ -141,7 +141,7 @@ void alignOverlap(const string& X, const string& Y)
                 }
         }
 
-        for (size_t j = 0; j <= n; j++) {
+        for (int j = 0; j <= n; j++) {
                 if (S(m, j) > maxVal) {
                         maxVal = S(m, j);
                         maxi = m;
@@ -176,12 +176,12 @@ void alignOverlap(const string& X, const string& Y)
                 }
         }
 
-        for (size_t c = 0; c < i; c++) {
+        for (int c = 0; c < i; c++) {
                 alY.push_back(' ');
                 mid.push_back(' ');
         }
 
-        for (size_t c = 0; c < j; c++) {
+        for (int c = 0; c < j; c++) {
                 alX.push_back(' ');
                 mid.push_back(' ');
         }

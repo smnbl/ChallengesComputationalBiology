@@ -125,11 +125,11 @@ void alignBandedNW(const string& X, const string& Y, int W)
         BandMatrix S(m+1, W);
 
         // initialize first column
-        for (size_t i = 0; i <= min(W, m); i++)
+        for (int i = 0; i <= min(W, m); i++)
                 S(i, 0) = i * G;
 
         // initialize first row
-        for (size_t j = 1; j <= W; j++)
+        for (int j = 1; j <= W; j++)
                 S(0, j) = j * G;
 
         // fill in the rest of the matrix
