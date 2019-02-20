@@ -20,47 +20,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <algorithm>
 
+#include "matrix.h"
+
 using namespace std;
-
-class BandMatrix
-{
-private:
-        vector<int> matrix;
-        int W;
-
-public:
-        /**
-         * Constructor
-         * @param m Number of rows
-         * @param W Number of off-diagonal elements (one sided)
-         */
-        BandMatrix(int m, int W) : W(W) {
-                matrix.resize(m * (2*W+1));
-        }
-
-        /**
-         * Operator () overloading
-         * @param i Row index
-         * @param j Column index
-         * @return Element at position (i, j)
-         */
-        int operator() (int i, int j) const {
-                return matrix[i * (2*W+1) + j - i + W];
-        }
-
-        /**
-         * Operator () overloading
-         * @param i Row index
-         * @param j Column index
-         * @return Reference to element at position (i, j)
-         */
-        int& operator() (int i, int j) {
-                return matrix[i * (2*W+1) + j - i + W];
-        }
-};
 
 /**
  * Write program usage information to the standard output

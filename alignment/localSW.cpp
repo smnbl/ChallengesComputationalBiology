@@ -20,45 +20,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <algorithm>
 
+#include "matrix.h"
+
 using namespace std;
-
-class Matrix
-{
-private:
-        vector<int> matrix;
-        int m;
-
-public:
-        /**
-         * Constructor
-         * @param m Number of rows
-         * @param n Number of columns
-         */
-        Matrix(size_t m, size_t n) : matrix(m*n), m(m) {}
-
-        /**
-         * Operator () overloading
-         * @param i Row index
-         * @param j Column index
-         * @return Element at position (i, j)
-         */
-        int operator() (int i, int j) const {
-                return matrix[j*m + i];
-        }
-
-        /**
-         * Operator () overloading
-         * @param i Row index
-         * @param j Column index
-         * @return Reference to element at position (i, j)
-         */
-        int& operator() (int i, int j) {
-                return matrix[j*m + i];
-        }
-};
 
 /**
  * Write program usage information to the standard output
