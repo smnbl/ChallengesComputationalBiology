@@ -161,7 +161,7 @@ public:
         }
 
         /**
-         * Set the suffix index (for leafs only)
+         * Set the suffix index (for leaves only)
          * @param target Target value
          */
         void setSuffixIdx(length_t target) {
@@ -169,7 +169,7 @@ public:
         }
 
         /**
-         * Get the suffix index in T (for leafs only)
+         * Get the suffix index in T (for leaves only)
          * @return suffix index
          */
         length_t getSuffixIdx() const {
@@ -374,7 +374,7 @@ private:
         /**
          * Step 1 of the Maass algorithm for the computation of suffix links
          * @param node Current node
-         * @param A Vector that maps causing leafs idx to the source of a SL
+         * @param A Vector that maps causing leaf idx to the source of a SL
          * @return The minimum suffix index for the subtree under node
          */
         length_t recComputeSLPhase1(STNode* node, std::vector<STNode*>& A);
@@ -382,7 +382,7 @@ private:
         /**
          * Step 2 of the Maass algorithm for the computation of suffix links
          * @param node Current node
-         * @param A Vector that maps causing leafs idx to the source of a SL
+         * @param A Vector that maps causing leaf idx to the source of a SL
          * @param B Vector that maps depth to node on the current path
          */
         void recComputeSLPhase2(STNode* node, const std::vector<STNode*>& A,

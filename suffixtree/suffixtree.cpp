@@ -132,7 +132,7 @@ string SuffixTree::posToStr(const STPosition& pos) const
 
 void SuffixTree::getOccurrences(const STPosition& pos, vector<size_t>& occ) const
 {
-        // if so, find all the leafs under "pos"
+        // if so, find all the leaves under "pos"
         stack<STNode*> stack;
         stack.push(pos.node);
 
@@ -341,16 +341,16 @@ void SuffixTree::constructUkonen()
         // create root node with an empty range (it has no parent)
         root = new STNode(0, 0);
 
-        // algorithm invariant: pos points to T[i:j[
+        // algorithm invariant: pos points to T[i:j-1[
         STPosition pos(root);
 
-        // in phase j, build implicit suffix tree for prefix T[0:j]
-        for (size_t j = 0, numLeafs = 0; j < T.size(); j++) {
+        // in phase j, build implicit suffix tree for prefix T[0:j[
+        for (size_t j = 1, numLeaves = 0; j <= T.size(); j++) {
                 STNode *prevInternal = NULL;
 
                 // skip 'numleafs' times rule 1 (extension of leaf)
-                for (size_t i = numLeafs; i <= j; i++) {
-                        // note that pos will always point to T[i:j[ at this point
+                for (size_t i = numLeaves; i < j; i++) {
+                        // note that pos will always point to T[i:j-1[ at this point
 
                         // add a SL from the previously created internal node
                         if (prevInternal != NULL && pos.atNode()) {
@@ -358,8 +358,8 @@ void SuffixTree::constructUkonen()
                                 prevInternal = NULL;
                         }
 
-                        // try and add character T[j]
-                        if (advancePos(pos, T[j]))
+                        // try and add character T[j-1]
+                        if (advancePos(pos, T[j-1]))
                                 break; // rule 3 : do nothing + show stopper
 
                         // rule 2 : create internal node (optionally) and leaf
@@ -371,7 +371,7 @@ void SuffixTree::constructUkonen()
                         }
 
                         addLeaf(pos, i);
-                        numLeafs++;
+                        numLeaves++;
 
                         // extension is complete: follow suffix link
                         pos = followSuffixLink(pos);
