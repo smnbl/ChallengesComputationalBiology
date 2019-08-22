@@ -34,8 +34,11 @@
 
 typedef uint32_t length_t;
 
-// <position in T, position in Q, length of MEM>
-typedef std::tuple<size_t, size_t, size_t> MEMOcc;
+typedef struct {
+        size_t begin;
+        size_t end;
+        size_t editDist;
+} AppMatch;
 
 #define MAX_CHAR 256
 
@@ -355,11 +358,24 @@ private:
          * Find all approximate matches under a given position
          * @param pos Suffix tree position
          * @param P Pattern P
-         * @param occ Start positions of the occurrences in T (output)
          * @param M Banded matrix to keep track of the edit distance
+         * @param occ Occurrences found so far: < ST position, edit dist >
          */
-        void recMatchApprox(STPosition pos, const std::string& P,
-                            std::vector<size_t>& occ, BandMatrix& M);
+        void recMatchApprox(STPosition pos, const std::string& P, BandMatrix& M,
+                            std::vector<std::pair<STPosition, int> >& occ);
+
+        /**
+         * Find all approximate matches under a given position with less redundancy
+         * @param pos Suffix tree position
+         * @param P Pattern P
+         * @param M Banded matrix to keep track of the edit distance
+         * @param bestED Best ED along path to current ST position (pos)
+         * @param occ Occurrences found so far: < ST position, edit dist >
+         * @return True if this branch reported occurrences, false otherwise
+         */
+        bool recMatchApprox2(STPosition pos, const std::string& P,
+                             BandMatrix& M, int bestED,
+                             std::vector<std::pair<STPosition, int> >& occ);
 
         // --------------------------------------------------------------------
         // ROUTINES TO CONSTRUCT/MANIPULATE SUFFIX TREE
@@ -425,7 +441,7 @@ public:
          * @param occ Start positions of the occurrences in T (output)
          * @param maxEditDist Maximum edit distance
          */
-        void matchPatternApprox(const std::string& P, std::vector<size_t>& occ,
+        void matchPatternApprox(const std::string& P, std::vector<AppMatch>& occ,
                                 int maxEditDist);
 
         /**

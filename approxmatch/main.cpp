@@ -59,19 +59,21 @@ int main(int argc, char* argv[])
                 string word;
                 cin >> word;
 
-                vector<size_t> occ;
-                ST.matchPatternApprox(word, occ, 1);
-                cout << "Found " << occ.size() << " occurrences." << endl;
-                for (auto pos : occ) {
-                        size_t begin = pos;
-                        while (begin > 0 && T[begin-1] != '#')
-                                begin--;
+                vector<AppMatch> appMatches;
+                ST.matchPatternApprox(word, appMatches, 2);
+                cout << "Found " << appMatches.size() << " occurrences." << endl;
+                for (const auto appMatch : appMatches) {
+                        size_t b = appMatch.begin;
+                        size_t e = appMatch.end;
+                        cout << "* [" << T.substr(b, e-b) << "] at edit distance " << appMatch.editDist;
 
-                        size_t end = pos;
-                        while (end+1 < T.size() && T[end+1] != '#')
-                                end++;
+                        while ( b > 0 && T[b-1] != '#')
+                                b--;
 
-                        cout << "* " << T.substr(begin, end-begin+1) << endl;
+                        while ( e < T.size() && T[e] != '#')
+                                e++;
+
+                        cout << " -- corresponding word: " << T.substr(b, e-b) << endl;
                 }
 
         }

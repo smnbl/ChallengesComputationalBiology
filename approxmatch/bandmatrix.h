@@ -22,9 +22,26 @@
 
 #include <vector>
 
+#include <cstdio>
+
+using namespace std;
+
 // ============================================================================
 // CLASS BANDED MATRIX
 // ============================================================================
+
+// The band matrix class can best be understood as m horizontal bands each
+// with a width of 2W+1 elements. It is allocated as a single m*(2W+1) array.
+// For example, for W = 2 and m = 6.
+// XX|XXX...|
+//  X|XXXX..|
+//   |XXXXX.|
+//   |.XXXXX|
+//   |..XXXX|X
+//   |...XXX|XX
+// The actual matrix is between |.| The Xs left and right of the |.| are
+// allocated but should in principle not be addressed.
+// The storage order is row-major.
 
 class BandMatrix
 {

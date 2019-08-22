@@ -327,29 +327,31 @@ void SuffixTree::matchPattern(const string& P, vector<size_t>& occ)
         getOccurrences(pos.node, occ);
 }
 
-void SuffixTree::recMatchApprox(STPosition pos, const string& P,
-                                vector<size_t>& occ, BandMatrix& M)
+void SuffixTree::recMatchApprox(STPosition pos, const string& P, BandMatrix& M,
+                                std::vector<std::pair<STPosition, int> >& occ)
 {
-        const int W = M.getWidth();
+        const int W = M.getWidth();     // W = maximum edit distance
 
-        // matrix range we're filling in: M[starti:endi, j]
-        int j = pos.getDepth() + 1;
-        int starti = max<int>(1, j - W);
-        int endi = min<int>(P.size(), j + W);
+        // Matrix range we're filling in: M[i, startj:endj]
+        // suffix tree = vertical (index i) ; patter P = horizontal (index j)
+        int i = pos.getDepth() + 1;     // add one character in the ST
+        int firstj = max<int>(1, i - W);
+        int lastj = min<int>(P.size(), i + W);
 
-        vector<char> extensions = getCharExtensions(pos);
-        for (char c : extensions) {
+        // store in nextChar all character extensions that exist in the ST
+        vector<char> nextChar = getCharExtensions(pos);
+
+        for (char c : nextChar) {
                 if (c == '#' || c == '$')       // don't pass # signs
                         continue;
 
-                STPosition newPos = pos;        // only descend towards existing edges
-                if (!advancePos(newPos, c))
-                        continue;
+                STPosition newPos = pos;        // descend one char in the tree
+                advancePos(newPos, c);
 
                 // compute the next edit distance matrix column
                 int minVal = W + 1;
-                for (int i = starti; i <= endi; i++) {
-                        int diag = M(i-1, j-1) + (P[i-1] == c ? 0 : 1);
+                for (int j = firstj; j <= lastj; j++) {
+                        int diag = M(i-1, j-1) + (P[j-1] == c ? 0 : 1);
                         int gapX = (j > i - W) ? M(i, j-1) + 1 : diag + 1;
                         int gapY = (j < i + W) ? M(i-1, j) + 1 : diag + 1;
 
@@ -357,23 +359,101 @@ void SuffixTree::recMatchApprox(STPosition pos, const string& P,
                         minVal = min(minVal, M(i, j));
                 }
 
-                // edit distance threshold exceeded
+                // edit distance threshold exceeded: backtracking
                 if (minVal > W)
                         continue;
 
-                // have we reached the end of P?
-                if (endi >= P.size())
-                        if (M(P.size(), j) <= W ) {
-                                getOccurrences(newPos.node, occ);
-                                continue;
-                        }
+                // have we reached the end of P? (happens for different i)
+                if (lastj >= P.size())
+                        if (M(i, P.size()) <= W )
+                                occ.push_back( make_pair(newPos, M(i, P.size())) );
 
                 // continue searching deeper
-                recMatchApprox(newPos, P, occ, M);
+                recMatchApprox(newPos, P, M, occ);
         }
 }
 
-void SuffixTree::matchPatternApprox(const string& P, vector<size_t>& occ,
+bool SuffixTree::recMatchApprox2(STPosition pos, const string& P,
+                                 BandMatrix& M, int bestED,
+                                 std::vector<std::pair<STPosition, int> >& occ)
+{
+        const int W = M.getWidth();     // W = maximum edit distance
+        const length_t depth = pos.getDepth();
+
+        // get the edit distance at the current (parent) node; set to W+1
+        // if pattern P is not yet fully aligned
+        unsigned int ED = (depth + W >= P.size()) ? M(depth, P.size()) : W + 1;
+
+        // Matrix range we're filling in: M[i, startj:endj]
+        // suffix tree = vertical (index i) ; patter P = horizontal (index j)
+        int i = depth + 1;     // add one character in the ST
+        int firstj = max<int>(1, i - W);
+        int lastj = min<int>(P.size(), i + W);
+
+        // store all character extensions (= children) that exist in the ST
+        vector<char> nextChar = getCharExtensions(pos);
+
+        vector<length_t> chdED(nextChar.size(), W + 1); // minimum ED per child
+        vector<bool> chdReported(nextChar.size());      // child has reported?
+
+        for (size_t ci = 0; ci < nextChar.size(); ci++) {
+                char c = nextChar[ci];
+                if (c == '#' || c == '$')       // don't pass # signs
+                        continue;
+
+                STPosition newPos = pos;        // descend one char in the tree
+                advancePos(newPos, c);
+
+                // compute the next edit distance matrix column
+                int minChdED = W + 1;
+                for (int j = firstj; j <= lastj; j++) {
+                        int diag = M(i-1, j-1) + (P[j-1] == c ? 0 : 1);
+                        int gapX = (j > i - W) ? M(i, j-1) + 1 : diag + 1;
+                        int gapY = (j < i + W) ? M(i-1, j) + 1 : diag + 1;
+
+                        M(i, j) = min(min(diag, gapX), gapY);
+                        minChdED = min(minChdED, M(i, j));
+                }
+
+                // edit distance threshold exceeded: backtracking
+                if (minChdED > W)
+                        continue;
+
+                // have we reached the end of P? (happens for different i)
+                if (lastj == P.size())
+                        chdED[ci] = M(i, P.size());
+
+                // continue searching deeper
+                chdReported[ci] = recMatchApprox2(newPos, P, M,
+                                                  min<int>(ED, bestED), occ);
+        }
+
+        // check if at least one child reported
+        bool atLeastOneChildReported = false;
+        for (bool flag : chdReported)
+                if (flag)
+                        atLeastOneChildReported = true;
+
+        if (atLeastOneChildReported) {
+                // if one of the children has reported then all siblings need
+                // to report as well, if they have also found occurrences!
+                for (size_t ci = 0; ci < nextChar.size(); ci++)
+                        if (!chdReported[ci] && (chdED[ci] <= W)) {
+                                STPosition chdPos = pos;
+                                advancePos(chdPos, nextChar[ci]);
+                                occ.push_back( make_pair(chdPos, chdED[ci]) );
+                        }
+                return true;
+        } else {        // none of the children reported
+                if (ED < bestED) {
+                        occ.push_back( make_pair(pos, ED) );
+                        return true;
+                } else
+                        return false;
+        }
+}
+
+void SuffixTree::matchPatternApprox(const string& P, vector<AppMatch>& occ,
                                     int maxEditDist)
 {
         // clear the occurrence vector
@@ -381,12 +461,29 @@ void SuffixTree::matchPatternApprox(const string& P, vector<size_t>& occ,
 
         STPosition pos(root);
 
-        // intialize a band-diagonal matrix
-        BandMatrix M(P.size() + 1, maxEditDist);
+        // Intialize a band-diagonal matrix. The length of the diagonal should
+        // be the (P.size + maxED + 1) because (P.size + maxED) is the largest
+        // possible sequence we will align. The +1 is for the extra 0th row/col.
+        BandMatrix M(P.size() + maxEditDist + 1, maxEditDist);
         for (int i = 0; i <= maxEditDist; i++) {
                 M(0, i) = i;
                 M(i, 0) = i;
         }
 
-        recMatchApprox(pos, P, occ, M);
+        vector<pair<STPosition, int> > matchPos;
+        //recMatchApprox(pos, P, M, matchPos);
+        recMatchApprox2(pos, P, M, maxEditDist+1, matchPos);
+
+        for (auto pos : matchPos) {
+                vector<size_t> beginIdx;
+                getOccurrences(pos.first, beginIdx);
+
+                for (auto i : beginIdx) {
+                        AppMatch m;
+                        m.begin = i;
+                        m.end = i + pos.first.getDepth();
+                        m.editDist = pos.second;
+                        occ.push_back(m);
+                }
+        }
 }
