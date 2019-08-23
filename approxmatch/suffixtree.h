@@ -369,7 +369,7 @@ private:
          * @param pos Suffix tree position
          * @param P Pattern P
          * @param M Banded matrix to keep track of the edit distance
-         * @param bestED Best ED along path to current ST position (pos)
+         * @param bestED Best ED along *parent* positions to current ST position
          * @param occ Occurrences found so far: < ST position, edit dist >
          * @return True if this branch reported occurrences, false otherwise
          */

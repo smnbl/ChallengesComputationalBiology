@@ -20,6 +20,8 @@
 #include <iostream>
 #include <cassert>
 #include <stack>
+#include <functional>
+#include <numeric>
 #include "suffixtree.h"
 
 using namespace std;
@@ -429,12 +431,10 @@ bool SuffixTree::recMatchApprox2(STPosition pos, const string& P,
         }
 
         // check if at least one child reported
-        bool atLeastOneChildReported = false;
-        for (bool flag : chdReported)
-                if (flag)
-                        atLeastOneChildReported = true;
+        bool aChildReported = accumulate(chdReported.begin(), chdReported.end(),
+                                         false, logical_or<bool>());
 
-        if (atLeastOneChildReported) {
+        if (aChildReported) {
                 // if one of the children has reported then all siblings need
                 // to report as well, if they have also found occurrences!
                 for (size_t ci = 0; ci < nextChar.size(); ci++)
