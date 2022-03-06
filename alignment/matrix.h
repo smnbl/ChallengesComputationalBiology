@@ -61,6 +61,10 @@ public:
         int& operator() (int i, int j) {
                 return matrix[j*m + i];
         }
+
+        friend bool operator==(const Matrix& lhs, const Matrix& rhs) {
+            return lhs.matrix == rhs.matrix;
+        }
 };
 
 // ============================================================================
